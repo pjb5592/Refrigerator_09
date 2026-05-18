@@ -1,0 +1,394 @@
+:root {
+  color-scheme: light;
+  --background: #f5f7f1;
+  --panel: #ffffff;
+  --text: #172018;
+  --muted: #647067;
+  --border: #dfe6da;
+  --accent: #257a4f;
+  --accent-dark: #1d6040;
+  --danger: #b3261e;
+  --warning: #9a6200;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top left, rgba(37, 122, 79, 0.14), transparent 30rem),
+    var(--background);
+  color: var(--text);
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+code {
+  border-radius: 0.35rem;
+  background: #eef5ec;
+  padding: 0.1rem 0.35rem;
+  color: var(--accent-dark);
+  font-size: 0.92em;
+}
+
+.app-shell {
+  width: min(1120px, calc(100% - 2rem));
+  margin: 0 auto;
+  padding: 3rem 0;
+}
+
+.hero {
+  margin-bottom: 1.5rem;
+}
+
+.eyebrow {
+  margin: 0 0 0.5rem;
+  color: var(--accent);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin-top: 0;
+}
+
+h1 {
+  max-width: 760px;
+  margin-bottom: 1rem;
+  font-size: clamp(2.1rem, 5vw, 4.2rem);
+  line-height: 1.05;
+}
+
+h2 {
+  margin-bottom: 0;
+  font-size: clamp(1.5rem, 3vw, 2rem);
+}
+
+h3 {
+  margin-bottom: 0.75rem;
+}
+
+.hero-copy {
+  max-width: 760px;
+  color: var(--muted);
+  font-size: 1.05rem;
+  line-height: 1.7;
+}
+
+.panel {
+  margin-top: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 1.2rem;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 24px 70px rgba(23, 32, 24, 0.08);
+  padding: 1.25rem;
+}
+
+.upload-form {
+  display: grid;
+  gap: 1rem;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 1rem;
+}
+
+.form-grid label {
+  display: grid;
+  gap: 0.4rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.form-grid input,
+.saved-toolbar input {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 0.7rem;
+  padding: 0.75rem;
+  color: var(--text);
+}
+
+.drop-zone {
+  display: grid;
+  gap: 0.4rem;
+  border: 2px dashed #b7c6b5;
+  border-radius: 1rem;
+  background: #fbfdf9;
+  padding: 2rem;
+  text-align: center;
+  transition:
+    border-color 160ms ease,
+    background 160ms ease;
+}
+
+.drop-zone:hover {
+  border-color: var(--accent);
+  background: #f4fbf4;
+}
+
+.drop-zone input {
+  width: min(100%, 24rem);
+  margin: 1rem auto 0;
+}
+
+.drop-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+}
+
+.drop-copy,
+.muted {
+  color: var(--muted);
+}
+
+.preview-card {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 1rem;
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: 0.9rem;
+  padding: 0.75rem;
+}
+
+.preview-card img {
+  width: 120px;
+  height: 120px;
+  border-radius: 0.75rem;
+  object-fit: cover;
+}
+
+.file-name {
+  margin-bottom: 0.35rem;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.primary-button,
+.secondary-button,
+.danger-button {
+  border: 0;
+  border-radius: 0.75rem;
+  padding: 0.8rem 1rem;
+  font-weight: 800;
+}
+
+.primary-button {
+  background: var(--accent);
+  color: #ffffff;
+}
+
+.primary-button:hover:not(:disabled) {
+  background: var(--accent-dark);
+}
+
+.secondary-button {
+  border: 1px solid var(--border);
+  background: #ffffff;
+  color: var(--accent-dark);
+}
+
+.danger-button {
+  background: #fff2f1;
+  color: var(--danger);
+}
+
+.status {
+  margin-top: 1rem;
+  border-radius: 0.75rem;
+  padding: 0.9rem 1rem;
+  background: #eef5ec;
+  color: var(--accent-dark);
+  line-height: 1.5;
+}
+
+.status.error {
+  background: #fff2f1;
+  color: var(--danger);
+}
+
+.section-heading {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 900px;
+}
+
+th,
+td {
+  border-bottom: 1px solid var(--border);
+  padding: 0.7rem 0.45rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+th {
+  color: var(--muted);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+td input {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 0.55rem;
+  padding: 0.55rem;
+}
+
+tr.low-confidence {
+  background: #fff8e8;
+}
+
+.confidence-note {
+  display: block;
+  margin-top: 0.3rem;
+  color: var(--warning);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.uncertain-section {
+  margin-top: 1.25rem;
+  border-radius: 0.9rem;
+  background: #f8faf5;
+  padding: 1rem;
+}
+
+.uncertain-section li {
+  margin-bottom: 0.55rem;
+  color: var(--muted);
+}
+
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.recipe-card {
+  display: grid;
+  gap: 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  background: #ffffff;
+  padding: 1rem;
+}
+
+.recipe-card h3 {
+  margin: 0;
+}
+
+.recipe-meta,
+.pill-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.pill {
+  border-radius: 999px;
+  background: #eef5ec;
+  padding: 0.28rem 0.6rem;
+  color: var(--accent-dark);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.pill.missing {
+  background: #fff2f1;
+  color: var(--danger);
+}
+
+.recipe-card details {
+  border-top: 1px solid var(--border);
+  padding-top: 0.7rem;
+}
+
+.recipe-card li {
+  margin-bottom: 0.4rem;
+}
+
+.saved-toolbar {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+
+.disclaimer {
+  margin: 1rem 0 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.hidden {
+  display: none !important;
+}
+
+@media (max-width: 720px) {
+  .app-shell {
+    width: min(100% - 1rem, 1120px);
+    padding: 1rem 0;
+  }
+
+  .panel {
+    padding: 1rem;
+  }
+
+  .preview-card {
+    grid-template-columns: 1fr;
+  }
+
+  .preview-card img {
+    width: 100%;
+    height: 220px;
+  }
+
+  .section-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .saved-toolbar {
+    grid-template-columns: 1fr;
+  }
+}
