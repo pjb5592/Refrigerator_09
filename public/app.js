@@ -98,7 +98,7 @@ addIngredientButton.addEventListener('click', () => {
     quantity_estimate: '',
     unit: '',
     confidence: 1,
-    notes: 'manually added'
+    notes: '수동 추가'
   });
 });
 
@@ -214,7 +214,7 @@ function renderIngredients(payload) {
       quantity_estimate: '',
       unit: '',
       confidence: 0,
-      notes: 'No confident ingredients detected. Please add items manually.'
+      notes: '신뢰할 수 있는 재료가 감지되지 않았습니다. 재료를 직접 추가하세요.'
     });
   } else {
     ingredients.forEach(appendIngredientRow);
@@ -222,7 +222,7 @@ function renderIngredients(payload) {
 
   uncertainItems.forEach((item) => {
     const li = document.createElement('li');
-    li.textContent = `${item.description || 'unknown'}: ${item.reason || 'reason unknown'}`;
+    li.textContent = `${item.description || '알 수 없음'}: ${item.reason || '이유를 알 수 없음'}`;
     uncertainList.append(li);
   });
 
@@ -255,7 +255,7 @@ function createInputCell(value, field) {
   const td = document.createElement('td');
   const input = document.createElement('input');
   input.dataset.field = field;
-  input.value = value === 'unknown' ? '' : value || '';
+  input.value = value === 'unknown' || value === '알 수 없음' ? '' : value || '';
   td.append(input);
   return td;
 }
@@ -340,14 +340,14 @@ function createRecipeCard(recipe, options = {}) {
   title.textContent = recipe.title;
 
   const summary = document.createElement('p');
-  summary.textContent = recipe.summary || 'No summary provided.';
+  summary.textContent = recipe.summary || '요약이 제공되지 않았습니다.';
 
   const meta = document.createElement('div');
   meta.className = 'recipe-meta';
   meta.append(
-    createPill(`${recipe.difficulty || 'easy'}`),
-    createPill(`${Number(recipe.prep_time_minutes || 0) + Number(recipe.cook_time_minutes || 0)} min`),
-    createPill(`${recipe.servings || 2} servings`)
+    createPill(formatDifficulty(recipe.difficulty || 'easy')),
+    createPill(`${Number(recipe.prep_time_minutes || 0) + Number(recipe.cook_time_minutes || 0)}분`),
+    createPill(`${recipe.servings || 2}인분`)
   );
 
   const used = createPillList('사용 재료', recipe.used_ingredients);
@@ -364,7 +364,7 @@ function createRecipeCard(recipe, options = {}) {
     const saveButton = document.createElement('button');
     saveButton.className = 'secondary-button';
     saveButton.type = 'button';
-    saveButton.textContent = 'Save Recipe';
+    saveButton.textContent = '레시피 저장';
     saveButton.addEventListener('click', () => saveRecipe(latestRecipes[options.index]));
     card.append(saveButton);
   }
@@ -396,8 +396,8 @@ function createPillList(label, items, missing = false) {
   title.textContent = label;
   wrapper.append(title);
 
-  const values = Array.isArray(items) && items.length > 0 ? items : ['none'];
-  values.forEach((item) => list.append(createPill(item, missing && item !== 'none')));
+  const values = Array.isArray(items) && items.length > 0 ? items : ['없음'];
+  values.forEach((item) => list.append(createPill(item, missing && item !== '없음')));
   wrapper.append(list);
   return wrapper;
 }
@@ -536,7 +536,7 @@ async function deleteSavedRecipe(id) {
   try {
     const response = await fetch(`/api/saved-recipes/${id}`, { method: 'DELETE' });
     if (!response.ok) {
-      throw new Error('Delete failed.');
+      throw new Error('삭제 요청이 실패했습니다.');
     }
 
     await loadSavedRecipes(savedSearch.value);
@@ -551,7 +551,7 @@ async function requestJson(url, options) {
   const payload = text ? JSON.parse(text) : {};
 
   if (!response.ok) {
-    throw new Error(payload.error || `Request failed with status ${response.status}.`);
+    throw new Error(payload.error || `요청이 실패했습니다. 상태 코드: ${response.status}`);
   }
 
   return payload;
@@ -581,4 +581,14 @@ function formatBytes(bytes) {
   }
 
   return `${(bytes / (1024 * 1024)).toFixed(1)}MB`;
+}
+
+function formatDifficulty(value) {
+  const labels = {
+    easy: '쉬움',
+    medium: '보통',
+    hard: '어려움'
+  };
+
+  return labels[value] || value;
 }

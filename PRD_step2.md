@@ -1,66 +1,66 @@
-# PRD Step 2: Recipe Recommendation
+# PRD 2단계: 레시피 추천
 
-## Overview
+## 개요
 
-Step 2 uses the ingredient information from Step 1 to generate practical recipe recommendations. The recipe generation model is `deepseek/deepseek-chat-v3.1:free`.
+2단계는 1단계에서 얻은 재료 정보를 사용해 실제로 조리 가능한 레시피를 추천합니다. 레시피 생성 모델은 `deepseek/deepseek-chat-v3.1:free`입니다.
 
-## Goals
+## 목표
 
-- Generate recipes from confirmed refrigerator ingredients.
-- Prioritize recipes that use ingredients already detected in Step 1.
-- Provide clear cooking steps, time estimates, difficulty, and missing optional ingredients.
-- Let users regenerate or refine recommendations with simple preferences.
+- 사용자가 확인한 냉장고 재료를 바탕으로 레시피를 생성합니다.
+- 1단계에서 인식된 재료를 우선 활용하는 레시피를 추천합니다.
+- 조리 단계, 예상 시간, 난이도, 선택적으로 필요한 추가 재료를 명확히 제공합니다.
+- 사용자가 간단한 선호도를 입력해 추천을 다시 생성하거나 조정할 수 있게 합니다.
 
-## Non-Goals
+## 제외 범위
 
-- Do not build persistent user accounts in this step.
-- Do not save recipes permanently unless Step 3 is implemented.
-- Do not provide medical or professional nutrition advice.
-- Do not order groceries or connect to delivery services.
+- 이 단계에서는 영구 사용자 계정을 만들지 않습니다.
+- 3단계가 구현되기 전에는 레시피를 영구 저장하지 않습니다.
+- 의료 또는 전문 영양 조언을 제공하지 않습니다.
+- 식재료 주문이나 배달 서비스 연동을 구현하지 않습니다.
 
-## Dependencies
+## 의존성
 
-- Step 1 must provide a reviewed ingredient list.
-- The backend must have access to `OPENROUTER_API_KEY`.
-- The frontend must pass confirmed ingredients to the recipe generation endpoint.
+- 1단계는 사용자가 검토한 재료 목록을 제공해야 합니다.
+- 백엔드는 `OPENROUTER_API_KEY`에 접근할 수 있어야 합니다.
+- 프론트엔드는 확인된 재료를 레시피 생성 엔드포인트로 전달해야 합니다.
 
-## User Flow
+## 사용자 흐름
 
-1. User reviews detected ingredients from Step 1.
-2. User optionally adds preferences such as cuisine, meal type, cooking time, allergies, or disliked ingredients.
-3. User clicks "Recommend Recipes".
-4. Backend sends ingredients and preferences to OpenRouter using `deepseek/deepseek-chat-v3.1:free`.
-5. App displays several recipe cards.
-6. User opens a recipe detail view.
-7. User can regenerate, adjust preferences, or move to Step 3 to save recipes.
+1. 사용자가 1단계에서 인식된 재료를 검토합니다.
+2. 사용자가 요리 종류, 식사 종류, 조리 시간, 알레르기, 싫어하는 재료 같은 선호도를 선택적으로 입력합니다.
+3. 사용자가 “레시피 추천” 버튼을 누릅니다.
+4. 백엔드는 재료와 선호도를 `deepseek/deepseek-chat-v3.1:free` 모델로 OpenRouter에 보냅니다.
+5. 앱은 여러 개의 레시피 카드를 표시합니다.
+6. 사용자는 레시피 상세 정보를 엽니다.
+7. 사용자는 추천을 다시 생성하거나 선호도를 조정하거나, 3단계로 이동해 레시피를 저장할 수 있습니다.
 
-## Functional Requirements
+## 기능 요구사항
 
-- The app must accept the edited ingredient list from Step 1.
-- The app must support optional preference inputs:
-  - cuisine style
-  - meal type
-  - maximum cooking time
-  - dietary restrictions
-  - allergies
-  - disliked ingredients
-  - serving count
-- The backend must request structured JSON output from the model.
-- The backend must validate model output before sending it to the frontend.
-- The UI must show at least 3 recipe recommendations when possible.
-- Each recipe must identify which detected ingredients are used and which ingredients are missing.
-- Users must be able to regenerate recommendations.
+- 앱은 1단계에서 수정된 재료 목록을 받아야 합니다.
+- 앱은 다음 선택 선호도 입력을 지원해야 합니다.
+  - 선호 요리
+  - 식사 종류
+  - 최대 조리 시간
+  - 식단 제한
+  - 알레르기
+  - 싫어하는 재료
+  - 인분 수
+- 백엔드는 모델에 구조화된 JSON 출력을 요청해야 합니다.
+- 백엔드는 모델 출력을 프론트엔드로 보내기 전에 검증해야 합니다.
+- UI는 가능한 경우 최소 3개의 레시피 추천을 표시해야 합니다.
+- 각 레시피는 사용된 인식 재료와 부족한 재료를 알려야 합니다.
+- 사용자는 추천을 다시 생성할 수 있어야 합니다.
 
-## Suggested Model Prompt Contract
+## 권장 모델 프롬프트 계약
 
-The backend should instruct the model to generate recipes using the provided ingredients and return JSON only:
+백엔드는 제공된 재료를 사용해 레시피를 생성하고 JSON만 반환하도록 모델에 지시해야 합니다.
 
 ```json
 {
   "recipes": [
     {
       "title": "Kimchi Egg Fried Rice",
-      "summary": "A quick rice dish using eggs and leftover vegetables.",
+      "summary": "달걀과 남은 채소를 활용한 빠른 밥 요리입니다.",
       "used_ingredients": ["egg", "green onion", "rice"],
       "optional_missing_ingredients": ["sesame oil"],
       "required_missing_ingredients": [],
@@ -69,23 +69,23 @@ The backend should instruct the model to generate recipes using the provided ing
       "difficulty": "easy",
       "servings": 2,
       "steps": [
-        "Chop the vegetables.",
-        "Scramble the eggs.",
-        "Stir-fry rice with kimchi and vegetables."
+        "채소를 잘게 썹니다.",
+        "달걀을 스크램블합니다.",
+        "김치와 채소를 넣고 밥을 볶습니다."
       ],
       "safety_notes": [
-        "Check ingredient freshness before cooking."
+        "조리 전에 재료의 신선도를 확인하세요."
       ]
     }
   ]
 }
 ```
 
-## API Requirements
+## API 요구사항
 
 ### `POST /api/generate-recipes`
 
-Request:
+요청:
 
 ```json
 {
@@ -109,7 +109,7 @@ Request:
 }
 ```
 
-Response:
+응답:
 
 ```json
 {
@@ -118,53 +118,53 @@ Response:
 }
 ```
 
-Error cases:
+오류 사례:
 
-- `400`: missing ingredients or invalid preferences
-- `429`: OpenRouter or upstream provider rate limit
-- `500`: unexpected server error
-- `502`: invalid model response
+- `400`: 재료 누락 또는 잘못된 선호도
+- `429`: OpenRouter 또는 상위 제공자의 요청 제한
+- `500`: 예상하지 못한 서버 오류
+- `502`: 잘못된 모델 응답
 
-## Data Requirements
+## 데이터 요구사항
 
-Recipe object:
+레시피 객체:
 
-- `title`: recipe name
-- `summary`: short description
-- `used_ingredients`: detected ingredients used by the recipe
-- `optional_missing_ingredients`: nice-to-have items
-- `required_missing_ingredients`: must-have items not detected
-- `prep_time_minutes`: estimated prep time
-- `cook_time_minutes`: estimated cooking time
-- `difficulty`: `easy`, `medium`, or `hard`
-- `servings`: serving count
-- `steps`: ordered cooking instructions
-- `safety_notes`: freshness, allergy, or cooking safety reminders
+- `title`: 레시피 이름
+- `summary`: 짧은 설명
+- `used_ingredients`: 레시피에 사용된 인식 재료
+- `optional_missing_ingredients`: 있으면 좋은 추가 재료
+- `required_missing_ingredients`: 꼭 필요하지만 인식되지 않은 재료
+- `prep_time_minutes`: 예상 준비 시간
+- `cook_time_minutes`: 예상 조리 시간
+- `difficulty`: `easy`, `medium`, `hard`
+- `servings`: 인분 수
+- `steps`: 순서가 있는 조리 단계
+- `safety_notes`: 신선도, 알레르기, 조리 안전 관련 안내
 
-## UX Requirements
+## UX 요구사항
 
-- Show recipes as cards with title, time, difficulty, and matched ingredients.
-- Highlight recipes that require no additional required ingredients.
-- Let users expand a card to see full steps.
-- Provide "Regenerate" and "Adjust Preferences" actions.
-- Clearly label AI-generated content.
+- 제목, 시간, 난이도, 매칭된 재료를 포함한 카드 형태로 레시피를 표시합니다.
+- 추가 필수 재료가 필요 없는 레시피를 강조합니다.
+- 사용자가 카드를 펼쳐 전체 조리 단계를 볼 수 있게 합니다.
+- “다시 생성”과 “선호도 조정” 동작을 제공합니다.
+- AI가 생성한 콘텐츠임을 명확히 표시합니다.
 
-## Security and Safety
+## 보안 및 안전
 
-- Do not send personal profile data in this step unless explicitly needed.
-- Do not log full prompts if they may contain private user preferences.
-- Include allergy and freshness disclaimers in the UI.
-- Treat recipe output as suggestions, not professional health advice.
+- 명시적으로 필요하지 않으면 이 단계에서 개인 프로필 데이터를 보내지 않습니다.
+- 개인 선호도가 포함될 수 있는 전체 프롬프트를 로그로 남기지 않습니다.
+- UI에 알레르기와 신선도 관련 안내를 포함합니다.
+- 레시피 결과는 전문 건강 조언이 아니라 제안으로 취급합니다.
 
-## Success Metrics
+## 성공 지표
 
-- At least 80% of successful requests produce 3 or more valid recipe cards.
-- At least 70% of recipes use 2 or more detected ingredients when enough ingredients are available.
-- Users can move from confirmed ingredients to recipe results in under 30 seconds under normal API latency.
+- 성공 요청의 80% 이상이 3개 이상의 유효한 레시피 카드를 생성합니다.
+- 충분한 재료가 있을 때 레시피의 70% 이상이 인식된 재료 2개 이상을 사용합니다.
+- 정상 API 지연 시간에서 사용자는 확인된 재료에서 레시피 결과까지 30초 이내에 이동할 수 있습니다.
 
-## Acceptance Criteria
+## 인수 기준
 
-- A user can generate recipes from Step 1 ingredients.
-- The request uses `deepseek/deepseek-chat-v3.1:free`.
-- Recipes include used ingredients, missing ingredients, time, difficulty, and steps.
-- Invalid model output is handled without breaking the UI.
+- 사용자가 1단계 재료로 레시피를 생성할 수 있습니다.
+- 요청은 `deepseek/deepseek-chat-v3.1:free` 모델을 사용합니다.
+- 레시피에는 사용 재료, 부족한 재료, 시간, 난이도, 조리 단계가 포함됩니다.
+- 잘못된 모델 출력도 UI를 깨뜨리지 않고 처리합니다.

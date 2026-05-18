@@ -50,21 +50,21 @@ app.post('/api/recognize-image', (req, res) => {
 
       res.status(400).json({
         error: isTooLarge
-          ? 'Image is too large. Please upload an image under 5MB.'
+          ? '이미지가 너무 큽니다. 5MB 이하의 이미지를 업로드하세요.'
           : isUnsupported
-            ? 'Unsupported image type. Please upload JPG, PNG, or WebP.'
-            : 'Unable to read the uploaded image.'
+            ? '지원하지 않는 이미지 형식입니다. JPG, PNG, WebP 이미지를 업로드하세요.'
+            : '업로드한 이미지를 읽을 수 없습니다.'
       });
       return;
     }
 
     if (!req.file) {
-      res.status(400).json({ error: 'Missing image file.' });
+      res.status(400).json({ error: '이미지 파일이 없습니다.' });
       return;
     }
 
     if (!process.env.OPENROUTER_API_KEY) {
-      res.status(500).json({ error: 'Server is missing OPENROUTER_API_KEY.' });
+      res.status(500).json({ error: '서버에 OPENROUTER_API_KEY가 설정되어 있지 않습니다.' });
       return;
     }
 
@@ -79,7 +79,7 @@ app.post('/api/recognize-image', (req, res) => {
             {
               role: 'system',
               content:
-                'You identify refrigerator ingredients from images. Return valid JSON only. Do not include markdown fences or extra commentary.'
+                '냉장고 이미지에서 재료를 식별합니다. 유효한 JSON만 반환하고 마크다운 코드 블록이나 추가 설명은 포함하지 마세요.'
             },
             {
               role: 'user',
@@ -87,7 +87,7 @@ app.post('/api/recognize-image', (req, res) => {
                 {
                   type: 'text',
                   text:
-                    'Identify visible food ingredients and packaged food items in this refrigerator image. Return JSON with this exact shape: {"ingredients":[{"name":"string","category":"string","quantity_estimate":"string","unit":"string","confidence":0.0,"notes":"string"}],"uncertain_items":[{"description":"string","reason":"string"}]}. Use English ingredient names. If quantity or unit is unknown, use "unknown". Confidence must be between 0 and 1.'
+                    '이 냉장고 이미지에서 보이는 식재료와 포장 식품을 식별하세요. 다음 구조의 JSON만 반환하세요: {"ingredients":[{"name":"string","category":"string","quantity_estimate":"string","unit":"string","confidence":0.0,"notes":"string"}],"uncertain_items":[{"description":"string","reason":"string"}]}. 재료 이름과 설명은 한국어로 작성하세요. 수량이나 단위를 알 수 없으면 "알 수 없음"을 사용하세요. confidence는 0과 1 사이의 숫자여야 합니다.'
                 },
                 {
                   type: 'image_url',
@@ -113,7 +113,7 @@ app.post('/api/recognize-image', (req, res) => {
 
       if (!parsed) {
         res.status(502).json({
-          error: 'The model returned an invalid ingredient format. Please retry.'
+          error: '모델이 잘못된 재료 형식을 반환했습니다. 다시 시도하세요.'
         });
         return;
       }
@@ -124,13 +124,13 @@ app.post('/api/recognize-image', (req, res) => {
         model
       });
     } catch (error) {
-      console.error('Image recognition failed:', error.message);
+      console.error('이미지 인식 실패:', error.message);
       if (error.name === 'AbortError') {
-        res.status(504).json({ error: 'OpenRouter image recognition timed out. Please retry.' });
+        res.status(504).json({ error: 'OpenRouter 이미지 인식 시간이 초과되었습니다. 다시 시도하세요.' });
         return;
       }
 
-      res.status(500).json({ error: 'Unexpected server error while recognizing the image.' });
+      res.status(500).json({ error: '이미지 인식 중 예상하지 못한 서버 오류가 발생했습니다.' });
     }
   });
 });
@@ -140,12 +140,12 @@ app.post('/api/generate-recipes', async (req, res) => {
   const preferences = normalizePreferences(req.body?.preferences);
 
   if (ingredients.length === 0) {
-    res.status(400).json({ error: 'At least one ingredient is required.' });
+    res.status(400).json({ error: '재료가 하나 이상 필요합니다.' });
     return;
   }
 
   if (!process.env.OPENROUTER_API_KEY) {
-    res.status(500).json({ error: 'Server is missing OPENROUTER_API_KEY.' });
+    res.status(500).json({ error: '서버에 OPENROUTER_API_KEY가 설정되어 있지 않습니다.' });
     return;
   }
 
@@ -159,11 +159,11 @@ app.post('/api/generate-recipes', async (req, res) => {
           {
             role: 'system',
             content:
-              'You generate practical home recipes from refrigerator ingredients. Return one valid JSON object only. Do not include markdown fences, commentary, or text before or after JSON.'
+              '냉장고 재료로 실제 가정에서 만들 수 있는 레시피를 생성합니다. 유효한 JSON 객체 하나만 반환하고, 마크다운 코드 블록이나 추가 설명은 포함하지 마세요.'
           },
           {
             role: 'user',
-            content: `Create exactly 3 recipe recommendations from these ingredients and preferences. Prefer recipes that use detected ingredients. Return this JSON schema only: {"recipes":[{"title":"string","summary":"string","used_ingredients":["string"],"optional_missing_ingredients":["string"],"required_missing_ingredients":["string"],"prep_time_minutes":0,"cook_time_minutes":0,"difficulty":"easy","servings":2,"steps":["string"],"safety_notes":["string"]}]}. Ingredients: ${JSON.stringify(ingredients)}. Preferences: ${JSON.stringify(preferences)}.`
+            content: `다음 재료와 선호도를 바탕으로 정확히 3개의 레시피를 추천하세요. 인식된 재료를 우선 사용하는 레시피를 선호하세요. 다음 JSON 스키마만 반환하세요: {"recipes":[{"title":"string","summary":"string","used_ingredients":["string"],"optional_missing_ingredients":["string"],"required_missing_ingredients":["string"],"prep_time_minutes":0,"cook_time_minutes":0,"difficulty":"easy","servings":2,"steps":["string"],"safety_notes":["string"]}]}. title, summary, ingredients, steps, safety_notes 값은 한국어로 작성하세요. difficulty 값은 easy, medium, hard 중 하나를 사용하세요. 재료: ${JSON.stringify(ingredients)}. 선호도: ${JSON.stringify(preferences)}.`
           }
         ]
       });
@@ -182,7 +182,7 @@ app.post('/api/generate-recipes', async (req, res) => {
 
     if (recipes.length === 0) {
       res.status(502).json({
-        error: 'The model returned an invalid recipe format. Please retry.'
+        error: '모델이 잘못된 레시피 형식을 반환했습니다. 다시 시도하세요.'
       });
       return;
     }
@@ -192,13 +192,13 @@ app.post('/api/generate-recipes', async (req, res) => {
       model: recipeModel
     });
   } catch (error) {
-    console.error('Recipe generation failed:', error.message);
+    console.error('레시피 생성 실패:', error.message);
     if (error.name === 'AbortError') {
-      res.status(504).json({ error: 'OpenRouter recipe generation timed out. Please retry.' });
+      res.status(504).json({ error: 'OpenRouter 레시피 생성 시간이 초과되었습니다. 다시 시도하세요.' });
       return;
     }
 
-    res.status(500).json({ error: 'Unexpected server error while generating recipes.' });
+    res.status(500).json({ error: '레시피 생성 중 예상하지 못한 서버 오류가 발생했습니다.' });
   }
 });
 
@@ -212,7 +212,7 @@ app.post('/api/profile', async (req, res) => {
   const displayName = toOptionalString(req.body?.display_name);
 
   if (!email) {
-    res.status(400).json({ error: 'Email is required for the local profile.' });
+    res.status(400).json({ error: '로컬 프로필에는 이메일이 필요합니다.' });
     return;
   }
 
@@ -236,14 +236,14 @@ app.post('/api/saved-recipes', async (req, res) => {
   const store = await readStore();
 
   if (!store.profile) {
-    res.status(400).json({ error: 'Create a profile before saving recipes.' });
+    res.status(400).json({ error: '레시피를 저장하기 전에 프로필을 생성하세요.' });
     return;
   }
 
   const recipe = normalizeSavedRecipe(req.body?.recipe);
 
   if (!recipe.title) {
-    res.status(400).json({ error: 'Recipe title is required.' });
+    res.status(400).json({ error: '레시피 제목이 필요합니다.' });
     return;
   }
 
@@ -296,7 +296,7 @@ app.delete('/api/saved-recipes/:id', async (req, res) => {
   store.saved_recipes = store.saved_recipes.filter((recipe) => recipe.id !== req.params.id);
 
   if (store.saved_recipes.length === beforeCount) {
-    res.status(404).json({ error: 'Saved recipe was not found.' });
+    res.status(404).json({ error: '저장된 레시피를 찾을 수 없습니다.' });
     return;
   }
 
@@ -305,7 +305,7 @@ app.delete('/api/saved-recipes/:id', async (req, res) => {
 });
 
 app.listen(port, () => {
-  console.log(`Refrigerator_09 is running at http://localhost:${port}`);
+  console.log(`Refrigerator_09가 http://localhost:${port}에서 실행 중입니다.`);
 });
 
 function parseModelJson(content) {
@@ -529,7 +529,7 @@ async function readStore() {
     };
   } catch (error) {
     if (error.code !== 'ENOENT') {
-      console.error('Failed to read local data store:', error.message);
+      console.error('로컬 데이터 저장소를 읽지 못했습니다:', error.message);
     }
 
     return { profile: null, saved_recipes: [] };

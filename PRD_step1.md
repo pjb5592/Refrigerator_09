@@ -1,54 +1,54 @@
-# PRD Step 1: Refrigerator Image Recognition
+# PRD 1단계: 냉장고 이미지 인식
 
-## Overview
+## 개요
 
-Step 1 builds the first user-facing workflow: upload or capture a refrigerator photo, send it to OpenRouter, and extract likely ingredients from the image.
+1단계는 사용자가 냉장고 사진을 업로드하거나 촬영하면 이미지를 OpenRouter로 보내고, 사진 속에서 보이는 재료 후보를 추출하는 첫 번째 사용자 흐름입니다.
 
-The image recognition model is `google/gemma-3-27b-it:free`.
+이미지 인식 모델은 `google/gemma-3-27b-it:free`입니다.
 
-## Goals
+## 목표
 
-- Let users submit one refrigerator image from desktop or mobile.
-- Identify visible food ingredients, packaged items, and approximate quantities when possible.
-- Return structured ingredient data that Step 2 can use for recipe generation.
-- Keep the OpenRouter API key server-side only.
+- 사용자가 데스크톱이나 모바일에서 냉장고 이미지 1장을 제출할 수 있게 합니다.
+- 보이는 식재료, 포장 식품, 가능한 경우 대략적인 수량을 식별합니다.
+- 2단계 레시피 생성에서 사용할 수 있는 구조화된 재료 데이터를 반환합니다.
+- OpenRouter API 키는 서버에서만 사용합니다.
 
-## Non-Goals
+## 제외 범위
 
-- Do not generate recipes in this step.
-- Do not require user login in this step.
-- Do not permanently store uploaded images unless a later step explicitly enables it.
-- Do not guarantee exact nutrition, expiration date, or freshness detection from image alone.
+- 이 단계에서는 레시피를 생성하지 않습니다.
+- 이 단계에서는 사용자 로그인을 요구하지 않습니다.
+- 이후 단계에서 명시적으로 활성화하지 않는 한 업로드 이미지를 영구 저장하지 않습니다.
+- 이미지만으로 정확한 영양 정보, 유통기한, 신선도를 보장하지 않습니다.
 
-## Target Users
+## 대상 사용자
 
-- Home users who want meal ideas based on what is currently in their refrigerator.
-- Users who prefer taking a photo instead of manually typing ingredients.
+- 현재 냉장고에 있는 재료로 식사 아이디어를 얻고 싶은 가정 사용자
+- 재료를 직접 입력하기보다 사진 촬영을 선호하는 사용자
 
-## User Flow
+## 사용자 흐름
 
-1. User opens the app landing page.
-2. User uploads or captures a refrigerator image.
-3. App previews the selected image.
-4. User clicks "Analyze Ingredients".
-5. Backend sends the image to OpenRouter using `google/gemma-3-27b-it:free`.
-6. App displays detected ingredients with confidence and editable labels.
-7. User can confirm, remove, or edit ingredients before moving to Step 2.
+1. 사용자가 앱 첫 화면을 엽니다.
+2. 사용자가 냉장고 이미지를 업로드하거나 촬영합니다.
+3. 앱이 선택한 이미지를 미리 보여줍니다.
+4. 사용자가 “재료 분석” 버튼을 누릅니다.
+5. 백엔드는 `google/gemma-3-27b-it:free` 모델을 사용해 이미지를 OpenRouter로 보냅니다.
+6. 앱은 인식된 재료, 신뢰도, 수정 가능한 라벨을 표시합니다.
+7. 사용자는 2단계로 넘어가기 전에 재료를 확인, 삭제, 수정할 수 있습니다.
 
-## Functional Requirements
+## 기능 요구사항
 
-- The app must support common image formats: JPG, PNG, and WebP.
-- The frontend must validate file type and size before upload.
-- The backend must convert the image to an OpenRouter-compatible image input.
-- The backend must call OpenRouter through `https://openrouter.ai/api/v1/chat/completions`.
-- The model prompt must request structured JSON output.
-- The UI must show loading, success, and error states.
-- Users must be able to edit the detected ingredient list.
-- The app must not expose `OPENROUTER_API_KEY` to the browser.
+- 앱은 JPG, PNG, WebP 이미지 형식을 지원해야 합니다.
+- 프론트엔드는 업로드 전에 파일 형식과 크기를 검증해야 합니다.
+- 백엔드는 이미지를 OpenRouter가 받을 수 있는 이미지 입력 형식으로 변환해야 합니다.
+- 백엔드는 `https://openrouter.ai/api/v1/chat/completions`를 호출해야 합니다.
+- 모델 프롬프트는 구조화된 JSON 출력을 요청해야 합니다.
+- UI는 로딩, 성공, 오류 상태를 표시해야 합니다.
+- 사용자는 인식된 재료 목록을 수정할 수 있어야 합니다.
+- 앱은 브라우저에 `OPENROUTER_API_KEY`를 노출하면 안 됩니다.
 
-## Suggested Model Prompt Contract
+## 권장 모델 프롬프트 계약
 
-The backend should ask the model to identify visible refrigerator ingredients and respond with JSON only:
+백엔드는 모델에 냉장고 안에서 보이는 재료를 식별하고 JSON만 반환하도록 요청합니다.
 
 ```json
 {
@@ -59,28 +59,28 @@ The backend should ask the model to identify visible refrigerator ingredients an
       "quantity_estimate": "6",
       "unit": "pieces",
       "confidence": 0.84,
-      "notes": "visible in carton"
+      "notes": "carton 안에 보임"
     }
   ],
   "uncertain_items": [
     {
-      "description": "green leafy vegetable in plastic bag",
-      "reason": "label is not visible"
+      "description": "비닐봉지 안의 초록색 잎채소",
+      "reason": "라벨이 보이지 않음"
     }
   ]
 }
 ```
 
-## API Requirements
+## API 요구사항
 
 ### `POST /api/recognize-image`
 
-Request:
+요청:
 
 - `multipart/form-data`
-- Field: `image`
+- 필드: `image`
 
-Response:
+응답:
 
 ```json
 {
@@ -90,48 +90,48 @@ Response:
 }
 ```
 
-Error cases:
+오류 사례:
 
-- `400`: missing image, unsupported format, or image too large
-- `429`: OpenRouter or upstream provider rate limit
-- `500`: unexpected server error
-- `502`: invalid or unusable model response
+- `400`: 이미지 누락, 지원하지 않는 형식, 또는 너무 큰 이미지
+- `429`: OpenRouter 또는 상위 제공자의 요청 제한
+- `500`: 예상하지 못한 서버 오류
+- `502`: 잘못되었거나 사용할 수 없는 모델 응답
 
-## Data Requirements
+## 데이터 요구사항
 
-Ingredient object:
+재료 객체:
 
-- `name`: normalized ingredient name
-- `category`: broad food category
-- `quantity_estimate`: approximate visible quantity
-- `unit`: unit when identifiable
-- `confidence`: number from `0` to `1`
-- `notes`: short explanation
+- `name`: 정규화된 재료 이름
+- `category`: 넓은 의미의 식품 분류
+- `quantity_estimate`: 사진에서 보이는 대략적인 수량
+- `unit`: 식별 가능한 경우의 단위
+- `confidence`: `0`부터 `1` 사이의 신뢰도
+- `notes`: 짧은 설명
 
-## UX Requirements
+## UX 요구사항
 
-- Show image preview before analysis.
-- Display detected ingredients as editable chips or rows.
-- Mark low-confidence items visually.
-- Provide a retry option when OpenRouter returns a rate limit or provider error.
-- Warn users that results are AI estimates and should be reviewed.
+- 분석 전에 이미지 미리보기를 표시합니다.
+- 인식된 재료를 수정 가능한 칩 또는 행으로 표시합니다.
+- 신뢰도가 낮은 항목은 시각적으로 구분합니다.
+- OpenRouter 요청 제한이나 제공자 오류가 발생하면 재시도 선택지를 제공합니다.
+- 결과가 AI 추정값이며 사용자가 확인해야 한다는 안내를 표시합니다.
 
-## Security and Privacy
+## 보안 및 개인정보
 
-- Store `OPENROUTER_API_KEY` in `.env` only.
-- Do not log raw images, base64 image data, or API keys.
-- Limit upload size to reduce cost and abuse.
-- Strip image metadata before forwarding when practical.
+- `OPENROUTER_API_KEY`는 `.env`에만 저장합니다.
+- 원본 이미지, base64 이미지 데이터, API 키를 로그에 남기지 않습니다.
+- 비용과 악용을 줄이기 위해 업로드 크기를 제한합니다.
+- 가능하면 전달 전에 이미지 메타데이터를 제거합니다.
 
-## Success Metrics
+## 성공 지표
 
-- At least 90% of valid test images receive a structured response.
-- Users can complete image upload and ingredient review in under 60 seconds.
-- Less than 5% of model responses fail JSON parsing after retry or repair handling.
+- 유효한 테스트 이미지의 90% 이상이 구조화된 응답을 받습니다.
+- 사용자가 이미지 업로드와 재료 검토를 60초 이내에 완료할 수 있습니다.
+- 재시도 또는 복구 처리 후 JSON 파싱 실패율을 5% 미만으로 유지합니다.
 
-## Acceptance Criteria
+## 인수 기준
 
-- A user can upload a refrigerator image and receive a visible ingredient list.
-- The request uses `google/gemma-3-27b-it:free`.
-- The API key never appears in frontend code or network responses.
-- The ingredient result can be edited before recipe generation.
+- 사용자가 냉장고 이미지를 업로드하고 보이는 재료 목록을 받을 수 있습니다.
+- 요청은 `google/gemma-3-27b-it:free` 모델을 사용합니다.
+- API 키는 프론트엔드 코드나 네트워크 응답에 나타나지 않습니다.
+- 레시피 생성 전에 재료 결과를 수정할 수 있습니다.
