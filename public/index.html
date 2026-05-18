@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Refrigerator_09</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="hero">
+        <p class="eyebrow">Refrigerator_09</p>
+        <h1>냉장고 사진에서 재료를 찾고 레시피를 추천합니다</h1>
+        <p class="hero-copy">
+          1단계는 이미지 인식, 2단계는 레시피 생성, 3단계는 프로필과 저장 레시피를 다룹니다.
+          OpenRouter API 키는 서버에서만 사용됩니다.
+        </p>
+      </section>
+
+      <section class="panel">
+        <form id="upload-form" class="upload-form">
+          <label class="drop-zone" for="image-input">
+            <span class="drop-title">이미지 선택</span>
+            <span class="drop-copy">JPG, PNG, WebP 파일을 업로드하세요. 최대 5MB.</span>
+            <input id="image-input" name="image" type="file" accept="image/jpeg,image/png,image/webp" />
+          </label>
+
+          <div id="preview-card" class="preview-card hidden">
+            <img id="image-preview" alt="선택한 냉장고 이미지 미리보기" />
+            <div>
+              <p id="file-name" class="file-name"></p>
+              <p id="file-meta" class="muted"></p>
+            </div>
+          </div>
+
+          <button id="analyze-button" class="primary-button" type="submit" disabled>
+            재료 분석
+          </button>
+        </form>
+
+        <div id="status" class="status hidden" role="status"></div>
+      </section>
+
+      <section id="results-section" class="panel">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">인식된 재료</p>
+            <h2>인식 결과</h2>
+            <p class="muted">이미지 인식이 실패해도 재료를 직접 추가해서 레시피 추천을 받을 수 있습니다.</p>
+          </div>
+          <button id="add-ingredient-button" class="secondary-button" type="button">재료 추가</button>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>이름</th>
+                <th>분류</th>
+                <th>수량</th>
+                <th>단위</th>
+                <th>신뢰도</th>
+                <th>메모</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="ingredients-body"></tbody>
+          </table>
+        </div>
+
+        <div id="uncertain-section" class="uncertain-section hidden">
+          <h3>확실하지 않은 항목</h3>
+          <ul id="uncertain-list"></ul>
+        </div>
+
+        <p class="disclaimer">
+          AI 인식 결과는 추정값입니다. 재료 이름, 수량, 신선도는 사용자가 직접 확인해야 합니다.
+        </p>
+      </section>
+
+      <section id="recipe-section" class="panel">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">2단계</p>
+            <h2>레시피 추천</h2>
+          </div>
+          <button id="generate-recipes-button" class="primary-button" type="button">
+            레시피 추천
+          </button>
+        </div>
+
+        <div class="form-grid">
+          <label>
+            선호 요리
+            <input id="pref-cuisine" type="text" placeholder="한식, 양식" />
+          </label>
+          <label>
+            식사 종류
+            <input id="pref-meal-type" type="text" placeholder="저녁" />
+          </label>
+          <label>
+            최대 조리 시간
+            <input id="pref-max-time" type="number" min="0" value="30" />
+          </label>
+          <label>
+            인분
+            <input id="pref-servings" type="number" min="1" value="2" />
+          </label>
+          <label>
+            식단 제한
+            <input id="pref-restrictions" type="text" placeholder="채식, 저염식" />
+          </label>
+          <label>
+            알레르기
+            <input id="pref-allergies" type="text" placeholder="땅콩, 갑각류" />
+          </label>
+          <label>
+            싫어하는 재료
+            <input id="pref-disliked" type="text" placeholder="고수" />
+          </label>
+        </div>
+
+        <div id="recipe-status" class="status hidden" role="status"></div>
+        <div id="recipes-list" class="cards-grid"></div>
+      </section>
+
+      <section id="profile-section" class="panel">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">3단계</p>
+            <h2>프로필과 저장 레시피</h2>
+          </div>
+          <button id="refresh-saved-button" class="secondary-button" type="button">
+            저장 목록 새로고침
+          </button>
+        </div>
+
+        <form id="profile-form" class="form-grid">
+          <label>
+            이메일
+            <input id="profile-email" type="email" placeholder="user@example.com" required />
+          </label>
+          <label>
+            표시 이름
+            <input id="profile-name" type="text" placeholder="우리집 요리사" />
+          </label>
+          <label>
+            선호 요리
+            <input id="profile-cuisines" type="text" placeholder="한식, 일식" />
+          </label>
+          <label>
+            식단 제한
+            <input id="profile-restrictions" type="text" placeholder="채식" />
+          </label>
+          <label>
+            알레르기
+            <input id="profile-allergies" type="text" placeholder="땅콩" />
+          </label>
+          <label>
+            싫어하는 재료
+            <input id="profile-disliked" type="text" placeholder="고수" />
+          </label>
+          <label>
+            기본 인분
+            <input id="profile-servings" type="number" min="1" value="2" />
+          </label>
+          <label>
+            기본 최대 시간
+            <input id="profile-max-time" type="number" min="0" value="30" />
+          </label>
+          <button class="primary-button" type="submit">프로필 저장</button>
+        </form>
+
+        <div id="profile-status" class="status hidden" role="status"></div>
+
+        <div class="saved-toolbar">
+          <input id="saved-search" type="search" placeholder="저장된 레시피 검색" />
+          <button id="search-saved-button" class="secondary-button" type="button">검색</button>
+        </div>
+        <div id="saved-recipes-list" class="cards-grid"></div>
+      </section>
+    </main>
+
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>

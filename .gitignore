@@ -15,3 +15,8 @@ out/
 .DS_Store
 Thumbs.db
 .vscode/
+
+# Local app data
+data/*.json
+.tmp-*
+agents/*.exe
