@@ -75,3 +75,31 @@ This project uses Node.js with project-local `node_modules`, so a Python-style v
 npm ci
 npm start
 ```
+
+## C++ Agent Registry
+
+Agent roles are defined in `agents/agent_roles.cpp`.
+
+Build and run when a C++ compiler is available:
+
+```bash
+npm run agents:build
+npm run agents:run
+```
+
+## Backup and Restore
+
+The current uploaded development state is backed up on:
+
+```text
+backup/dev-before-agent-improvements
+```
+
+To restore that backup locally:
+
+```bash
+git switch dev
+git reset --hard backup/dev-before-agent-improvements
+```
+
+Only run the restore command when you want to discard later local changes.

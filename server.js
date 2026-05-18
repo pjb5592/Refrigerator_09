@@ -16,6 +16,7 @@ const recipeModel = process.env.OPENROUTER_RECIPE_MODEL || 'deepseek/deepseek-ch
 const dataDir = path.join(__dirname, 'data');
 const dataFile = path.join(dataDir, 'app-data.json');
 const maxImageSizeBytes = 5 * 1024 * 1024;
+const openRouterTimeoutMs = 45_000;
 const allowedMimeTypes = new Set(['image/jpeg', 'image/png', 'image/webp']);
 
 const upload = multer({
@@ -69,18 +70,11 @@ app.post('/api/recognize-image', (req, res) => {
 
     try {
       const imageDataUrl = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
-      const openRouterResponse = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
-          'Content-Type': 'application/json',
-          'HTTP-Referer': 'https://github.com/pjb5592/Refrigerator_09',
-          'X-Title': 'Refrigerator_09'
-        },
-        body: JSON.stringify({
+      const { openRouterResponse, responseBody } = await postOpenRouterChatCompletion({
           model,
           temperature: 0.1,
           max_tokens: 1200,
+          response_format: { type: 'json_object' },
           messages: [
             {
               role: 'system',
@@ -104,10 +98,7 @@ app.post('/api/recognize-image', (req, res) => {
               ]
             }
           ]
-        })
-      });
-
-      const responseBody = await openRouterResponse.json().catch(() => null);
+        });
 
       if (!openRouterResponse.ok) {
         const status = openRouterResponse.status === 429 ? 429 : 502;
@@ -134,6 +125,11 @@ app.post('/api/recognize-image', (req, res) => {
       });
     } catch (error) {
       console.error('Image recognition failed:', error.message);
+      if (error.name === 'AbortError') {
+        res.status(504).json({ error: 'OpenRouter image recognition timed out. Please retry.' });
+        return;
+      }
+
       res.status(500).json({ error: 'Unexpected server error while recognizing the image.' });
     }
   });
@@ -154,28 +150,23 @@ app.post('/api/generate-recipes', async (req, res) => {
   }
 
   try {
-    const openRouterResponse = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: getOpenRouterHeaders(),
-      body: JSON.stringify({
+    const { openRouterResponse, responseBody } = await postOpenRouterChatCompletion({
         model: recipeModel,
-        temperature: 0.4,
-        max_tokens: 2200,
+        temperature: 0.2,
+        max_tokens: 3200,
+        response_format: { type: 'json_object' },
         messages: [
           {
             role: 'system',
             content:
-              'You generate practical home recipes from refrigerator ingredients. Return valid JSON only. Do not include markdown fences or commentary.'
+              'You generate practical home recipes from refrigerator ingredients. Return one valid JSON object only. Do not include markdown fences, commentary, or text before or after JSON.'
           },
           {
             role: 'user',
-            content: `Create 3 recipe recommendations from these ingredients and preferences. Prefer recipes that use detected ingredients. Return JSON with this exact shape: {"recipes":[{"title":"string","summary":"string","used_ingredients":["string"],"optional_missing_ingredients":["string"],"required_missing_ingredients":["string"],"prep_time_minutes":0,"cook_time_minutes":0,"difficulty":"easy","servings":2,"steps":["string"],"safety_notes":["string"]}]}. Ingredients: ${JSON.stringify(ingredients)}. Preferences: ${JSON.stringify(preferences)}.`
+            content: `Create exactly 3 recipe recommendations from these ingredients and preferences. Prefer recipes that use detected ingredients. Return this JSON schema only: {"recipes":[{"title":"string","summary":"string","used_ingredients":["string"],"optional_missing_ingredients":["string"],"required_missing_ingredients":["string"],"prep_time_minutes":0,"cook_time_minutes":0,"difficulty":"easy","servings":2,"steps":["string"],"safety_notes":["string"]}]}. Ingredients: ${JSON.stringify(ingredients)}. Preferences: ${JSON.stringify(preferences)}.`
           }
         ]
-      })
-    });
-
-    const responseBody = await openRouterResponse.json().catch(() => null);
+      });
 
     if (!openRouterResponse.ok) {
       const status = openRouterResponse.status === 429 ? 429 : 502;
@@ -187,7 +178,7 @@ app.post('/api/generate-recipes', async (req, res) => {
 
     const content = responseBody?.choices?.[0]?.message?.content;
     const parsed = parseModelJson(content);
-    const recipes = normalizeRecipes(parsed?.recipes);
+    const recipes = normalizeRecipes(Array.isArray(parsed) ? parsed : parsed?.recipes);
 
     if (recipes.length === 0) {
       res.status(502).json({
@@ -202,6 +193,11 @@ app.post('/api/generate-recipes', async (req, res) => {
     });
   } catch (error) {
     console.error('Recipe generation failed:', error.message);
+    if (error.name === 'AbortError') {
+      res.status(504).json({ error: 'OpenRouter recipe generation timed out. Please retry.' });
+      return;
+    }
+
     res.status(500).json({ error: 'Unexpected server error while generating recipes.' });
   }
 });
@@ -346,6 +342,25 @@ function getOpenRouterHeaders() {
     'HTTP-Referer': 'https://github.com/pjb5592/Refrigerator_09',
     'X-Title': 'Refrigerator_09'
   };
+}
+
+async function postOpenRouterChatCompletion(payload) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), openRouterTimeoutMs);
+
+  try {
+    const openRouterResponse = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: getOpenRouterHeaders(),
+      body: JSON.stringify(payload),
+      signal: controller.signal
+    });
+    const responseBody = await openRouterResponse.json().catch(() => null);
+
+    return { openRouterResponse, responseBody };
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 function normalizeIngredients(value) {

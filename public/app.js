@@ -28,11 +28,11 @@ const savedRecipesList = document.querySelector('#saved-recipes-list');
 
 let selectedFile = null;
 let latestRecipes = [];
+let previewUrl = '';
 
 imageInput.addEventListener('change', () => {
   const file = imageInput.files?.[0];
   setStatus(statusBox, '');
-  resultsSection.classList.add('hidden');
 
   if (!file) {
     clearPreview();
@@ -49,7 +49,12 @@ imageInput.addEventListener('change', () => {
   }
 
   selectedFile = file;
-  imagePreview.src = URL.createObjectURL(file);
+  if (previewUrl) {
+    URL.revokeObjectURL(previewUrl);
+  }
+
+  previewUrl = URL.createObjectURL(file);
+  imagePreview.src = previewUrl;
   fileName.textContent = file.name;
   fileMeta.textContent = `${file.type} · ${formatBytes(file.size)}`;
   previewCard.classList.remove('hidden');
@@ -177,6 +182,11 @@ function validateImage(file) {
 
 function clearPreview() {
   selectedFile = null;
+  if (previewUrl) {
+    URL.revokeObjectURL(previewUrl);
+    previewUrl = '';
+  }
+
   imagePreview.removeAttribute('src');
   fileName.textContent = '';
   fileMeta.textContent = '';
@@ -524,7 +534,11 @@ async function deleteSavedRecipe(id) {
   }
 
   try {
-    await fetch(`/api/saved-recipes/${id}`, { method: 'DELETE' });
+    const response = await fetch(`/api/saved-recipes/${id}`, { method: 'DELETE' });
+    if (!response.ok) {
+      throw new Error('Delete failed.');
+    }
+
     await loadSavedRecipes(savedSearch.value);
   } catch {
     setStatus(profileStatus, '레시피 삭제에 실패했습니다.', 'error');

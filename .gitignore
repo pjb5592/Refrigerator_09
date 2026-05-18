@@ -19,3 +19,4 @@ Thumbs.db
 # Local app data
 data/*.json
 .tmp-*
+agents/*.exe

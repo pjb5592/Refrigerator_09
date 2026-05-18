@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "start": "node server.js",
-    "dev": "node --watch server.js"
+    "dev": "node --watch server.js",
+    "agents:build": "g++ -std=c++17 -O2 agents/agent_roles.cpp -o agents/agent_roles.exe",
+    "agents:run": "agents\\agent_roles.exe"
   },
   "dependencies": {
     "dotenv": "^16.6.1",
